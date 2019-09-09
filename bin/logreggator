@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+
+const { spawn, exec } = require('child_process');
+const { some } = require('lodash');
+const { green, red } = require('chalk');
+const split = require('split2');
+
+const args = require('minimist')(process.argv.slice(2));
+
+const env = args.env || 'prod';
+const context = env === 'prod' ? 'prod' : 'notprod';
+
+const GET_PODS = `kubectl --context=acp-${context}_ASL --namespace=asl-${env} get pods -o=jsonpath={.items[*].metadata.name}`;
+
+const filters = args._;
+
+const ignore = ['redis', 'postgres-client', 'database-admin', 'mysql', 'migration'].concat(args.ignore).filter(Boolean);
+
+const log = pod => {
+  if (!filters.length || some(filters, filter => pod.includes(filter))) {
+    if (some(ignore, filter => pod.includes(filter))) {
+      console.error(`Ignoring logs for ${pod}`);
+      return;
+    }
+    console.error(`Showing logs for ${pod}`);
+    const proc = spawn('kubectl', [`--context=acp-${context}_ASL`, `--namespace=asl-${env}`, 'logs', '-f', '--timestamps', pod, 'app'], { stdio: ['inherit', 'pipe', 'pipe'] });
+
+    proc.stdout.pipe(split()).on('data', chunk => {
+      process.stdout.write(green(pod));
+      process.stdout.write(' ');
+      process.stdout.write(chunk);
+      process.stdout.write('\n');
+    });
+    proc.stderr.pipe(split()).on('data', chunk => {
+      process.stderr.write(red(pod));
+      process.stderr.write(' ');
+      process.stderr.write(chunk);
+      process.stderr.write('\n');
+    });
+  }
+}
+
+
+exec(GET_PODS, (err, stdout, stderr) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+  stdout.split(' ').forEach(p => log(p));
+});
