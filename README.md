@@ -26,7 +26,7 @@ To filter to only matching services:
 bin/logreggator public-ui
 ```
 
-This does a partial match so you this works:
+This does a partial match so this works:
 
 ```
 bin/logreggator ui
