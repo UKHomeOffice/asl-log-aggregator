@@ -37,3 +37,11 @@ And you can define multiple services, so this works too:
 ```
 bin/logreggator internal-ui internal-api
 ```
+
+## Examples
+
+Get all api GET requests that are taking longer than a second to respond:
+
+```
+bin/logreggator api workflow | grep GET | egrep ' [0-9]{4,5}\.[0-9]{3} ms'
+```
