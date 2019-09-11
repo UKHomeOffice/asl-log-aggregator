@@ -43,5 +43,5 @@ bin/logreggator internal-ui internal-api
 Get all api GET requests that are taking longer than a second to respond:
 
 ```
-bin/logreggator api workflow | grep GET | egrep ' [0-9]{4,5}\.[0-9]{3} ms'
+bin/logreggator api | grep GET | egrep ' [0-9]{4,5}\.[0-9]{3} ms'
 ```
